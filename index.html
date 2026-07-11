@@ -140,7 +140,8 @@
       background: #fff;
       color: #999;
       border: 2px solid #ddd;
-      transition: left 0.25s ease-out, top 0.25s ease-out;
+      transition: left 0.12s ease-out, top 0.12s ease-out;
+      touch-action: none;
     }
 
     #btn-nao.fugindo {
@@ -248,8 +249,32 @@
       'O "Sim" é bem mais bonito, vai... 🥺',
     ];
     let tentativas = 0;
+    let ultimaFuga = 0;
 
     const DISTANCIA_SEGURA = 110;
+    const MARGEM = 10;
+
+    // área realmente visível: no celular, com zoom ou barra do navegador,
+    // window.innerWidth/Height não bate com o que aparece na tela
+    function areaVisivel() {
+      const vv = window.visualViewport;
+      if (vv) {
+        return { esq: vv.offsetLeft, topo: vv.offsetTop, larg: vv.width, alt: vv.height };
+      }
+      return { esq: 0, topo: 0, larg: window.innerWidth, alt: window.innerHeight };
+    }
+
+    function prenderNaTela(x, y, rect) {
+      const a = areaVisivel();
+      const minX = a.esq + MARGEM;
+      const minY = a.topo + MARGEM;
+      const maxX = a.esq + a.larg - rect.width - MARGEM;
+      const maxY = a.topo + a.alt - rect.height - MARGEM;
+      return {
+        x: Math.min(Math.max(x, minX), Math.max(minX, maxX)),
+        y: Math.min(Math.max(y, minY), Math.max(minY, maxY)),
+      };
+    }
 
     function fugir(x, y) {
       const rect = btnNao.getBoundingClientRect();
@@ -259,38 +284,66 @@
       const dist = Math.hypot(x - centroX, y - centroY);
       if (dist > DISTANCIA_SEGURA) return;
 
-      // primeira fuga: solta o botão do layout
+      // primeira fuga: solta o botão do layout e move pro <body> —
+      // dentro do cartão, o backdrop-filter faz o position:fixed ser
+      // relativo ao cartão, e o botão acabava saindo da tela
       if (!btnNao.classList.contains('fugindo')) {
         btnNao.classList.add('fugindo');
         btnNao.style.left = rect.left + 'px';
         btnNao.style.top = rect.top + 'px';
         btnNao.style.width = rect.width + 'px';
+        document.body.appendChild(btnNao);
       }
 
       // direção oposta ao mouse + um pouco de aleatoriedade
-      let angulo = Math.atan2(centroY - y, centroX - x) + (Math.random() - 0.5) * 1.2;
+      const angulo = Math.atan2(centroY - y, centroX - x) + (Math.random() - 0.5) * 1.2;
       const salto = 150 + Math.random() * 120;
 
-      let novoX = centroX + Math.cos(angulo) * salto - rect.width / 2;
-      let novoY = centroY + Math.sin(angulo) * salto - rect.height / 2;
+      let pos = prenderNaTela(
+        centroX + Math.cos(angulo) * salto - rect.width / 2,
+        centroY + Math.sin(angulo) * salto - rect.height / 2,
+        rect
+      );
 
-      // mantém dentro da tela; se encostar na borda, teleporta pra um lugar aleatório
-      const maxX = window.innerWidth - rect.width - 10;
-      const maxY = window.innerHeight - rect.height - 10;
-      if (novoX < 10 || novoX > maxX || novoY < 10 || novoY > maxY) {
-        novoX = 10 + Math.random() * (maxX - 10);
-        novoY = 10 + Math.random() * (maxY - 10);
+      // se encostou na borda e continuou perto do dedo/mouse,
+      // sorteia outro canto da tela longe do ponteiro
+      const a = areaVisivel();
+      for (let i = 0; i < 20; i++) {
+        const cx = pos.x + rect.width / 2;
+        const cy = pos.y + rect.height / 2;
+        if (Math.hypot(x - cx, y - cy) > DISTANCIA_SEGURA + 20) break;
+        pos = prenderNaTela(
+          a.esq + Math.random() * Math.max(1, a.larg - rect.width),
+          a.topo + Math.random() * Math.max(1, a.alt - rect.height),
+          rect
+        );
       }
 
-      btnNao.style.left = novoX + 'px';
-      btnNao.style.top = novoY + 'px';
+      btnNao.style.left = pos.x + 'px';
+      btnNao.style.top = pos.y + 'px';
 
       fraseNao.textContent = frases[tentativas % frases.length];
       tentativas++;
+      ultimaFuga = Date.now();
 
       // o "Sim" vai crescendo pra ficar irresistível
-      const escala = Math.min(1 + tentativas * 0.06, 1.8);
+      const escala = Math.min(1 + tentativas * 0.04, 1.4);
       btnSim.style.transform = 'scale(' + escala + ')';
+    }
+
+    // se a tela mudar (girar o celular, barra do navegador sumir, zoom),
+    // puxa o botão de volta pra área visível
+    function trazerDeVolta() {
+      if (!btnNao.classList.contains('fugindo') || btnNao.style.display === 'none') return;
+      const rect = btnNao.getBoundingClientRect();
+      const pos = prenderNaTela(rect.left, rect.top, rect);
+      btnNao.style.left = pos.x + 'px';
+      btnNao.style.top = pos.y + 'px';
+    }
+    window.addEventListener('resize', trazerDeVolta);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', trazerDeVolta);
+      window.visualViewport.addEventListener('scroll', trazerDeVolta);
     }
 
     document.addEventListener('mousemove', (e) => fugir(e.clientX, e.clientY));
@@ -313,6 +366,9 @@
 
     // ---------- clicou no SIM 🎉 ----------
     btnSim.addEventListener('click', () => {
+      // toque logo depois de uma fuga do "Não" era mira no "Não",
+      // não uma resposta de verdade — ignora pra não comemorar sem querer
+      if (Date.now() - ultimaFuga < 600) return;
       pedido.style.display = 'none';
       btnNao.style.display = 'none';
       comemoracao.classList.add('ativo');
