@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Um pedido especial 💖</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --rosa: #ff5e8a;
+      --rosa-escuro: #e0356b;
+      --lilas: #b06ab3;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #ffdde1 0%, #fcb7d4 35%, #d8b4f8 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* ---- corações flutuando no fundo ---- */
+    .coracao-fundo {
+      position: absolute;
+      bottom: -10vh;
+      font-size: 24px;
+      opacity: 0.6;
+      animation: subir linear infinite;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    @keyframes subir {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+      10%  { opacity: 0.7; }
+      90%  { opacity: 0.5; }
+      100% { transform: translateY(-115vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* ---- cartão principal ---- */
+    .cartao {
+      position: relative;
+      z-index: 2;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      border-radius: 30px;
+      padding: 50px 40px;
+      max-width: 560px;
+      width: calc(100% - 40px);
+      text-align: center;
+      box-shadow: 0 25px 60px rgba(224, 53, 107, 0.35);
+      animation: entrar 0.9s ease-out;
+    }
+
+    @keyframes entrar {
+      from { transform: translateY(40px) scale(0.9); opacity: 0; }
+      to   { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .coracao-grande {
+      font-size: 70px;
+      display: inline-block;
+      animation: batida 1.2s ease-in-out infinite;
+    }
+
+    @keyframes batida {
+      0%, 100% { transform: scale(1); }
+      15%      { transform: scale(1.25); }
+      30%      { transform: scale(1); }
+      45%      { transform: scale(1.18); }
+      60%      { transform: scale(1); }
+    }
+
+    h1 {
+      margin-top: 18px;
+      font-size: clamp(1.7rem, 5vw, 2.6rem);
+      background: linear-gradient(90deg, var(--rosa-escuro), var(--lilas));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .subtitulo {
+      margin-top: 14px;
+      color: #7a4a63;
+      font-size: clamp(1rem, 3vw, 1.2rem);
+      line-height: 1.6;
+    }
+
+    .botoes {
+      margin-top: 40px;
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      flex-wrap: wrap;
+      min-height: 70px;
+    }
+
+    button {
+      border: none;
+      border-radius: 50px;
+      padding: 16px 48px;
+      font-size: 1.25rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      font-family: inherit;
+    }
+
+    #btn-sim {
+      background: linear-gradient(135deg, var(--rosa), var(--rosa-escuro));
+      color: #fff;
+      box-shadow: 0 10px 25px rgba(224, 53, 107, 0.45);
+      animation: pulso 1.6s ease-in-out infinite;
+    }
+
+    #btn-sim:hover {
+      transform: scale(1.12);
+      box-shadow: 0 14px 35px rgba(224, 53, 107, 0.6);
+    }
+
+    @keyframes pulso {
+      0%, 100% { box-shadow: 0 10px 25px rgba(224, 53, 107, 0.45); }
+      50%      { box-shadow: 0 10px 40px rgba(224, 53, 107, 0.75); }
+    }
+
+    #btn-nao {
+      background: #fff;
+      color: #999;
+      border: 2px solid #ddd;
+      transition: left 0.25s ease-out, top 0.25s ease-out;
+    }
+
+    #btn-nao.fugindo {
+      position: fixed;
+      z-index: 10;
+      margin: 0;
+    }
+
+    .frase-nao {
+      margin-top: 22px;
+      min-height: 28px;
+      color: var(--rosa-escuro);
+      font-weight: 600;
+      font-size: 1.05rem;
+    }
+
+    /* ---- tela de comemoração ---- */
+    #comemoracao {
+      display: none;
+    }
+
+    #comemoracao.ativo {
+      display: block;
+      animation: entrar 0.7s ease-out;
+    }
+
+    #comemoracao .gif-coracoes {
+      font-size: 60px;
+      letter-spacing: 8px;
+      animation: batida 1.2s ease-in-out infinite;
+      display: inline-block;
+    }
+
+    .confete {
+      position: fixed;
+      top: -5vh;
+      z-index: 5;
+      font-size: 26px;
+      animation: cair linear forwards;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    @keyframes cair {
+      to { transform: translateY(115vh) rotate(720deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cartao" id="pedido">
+    <span class="coracao-grande">💝</span>
+    <h1>Você quer namorar comigo?</h1>
+    <p class="subtitulo">
+      De todas as pessoas do mundo, foi você que fez meu coração bater diferente.<br />
+      Então eu preciso te fazer uma pergunta muito importante... 🥺
+    </p>
+
+    <div class="botoes">
+      <button id="btn-sim">Sim! 💖</button>
+      <button id="btn-nao">Não</button>
+    </div>
+
+    <p class="frase-nao" id="frase-nao"></p>
+  </div>
+
+  <div class="cartao ativo" id="comemoracao">
+    <span class="gif-coracoes">💖💍💖</span>
+    <h1>EEEEEBAAAA!!! 🎉</h1>
+    <p class="subtitulo">
+      Eu sabia que você ia dizer sim! 🥰<br />
+      Agora é oficial: <strong>somos namorados!</strong><br />
+      Te amo mais do que tudo! 💕
+    </p>
+  </div>
+
+  <script>
+    // ---------- corações de fundo ----------
+    const emojisFundo = ['💗', '💖', '💘', '💕', '❤️', '🌹'];
+    for (let i = 0; i < 18; i++) {
+      const c = document.createElement('span');
+      c.className = 'coracao-fundo';
+      c.textContent = emojisFundo[Math.floor(Math.random() * emojisFundo.length)];
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.fontSize = 16 + Math.random() * 28 + 'px';
+      c.style.animationDuration = 7 + Math.random() * 8 + 's';
+      c.style.animationDelay = -Math.random() * 12 + 's';
+      document.body.appendChild(c);
+    }
+
+    // ---------- botão "Não" fujão ----------
+    const btnNao = document.getElementById('btn-nao');
+    const btnSim = document.getElementById('btn-sim');
+    const fraseNao = document.getElementById('frase-nao');
+    const pedido = document.getElementById('pedido');
+    const comemoracao = document.getElementById('comemoracao');
+
+    const frases = [
+      'Ops, o botão escapou! 🙈',
+      'Tem certeza? Ele não quer ser clicado... 😅',
+      'Esse botão é tímido demais! 🏃💨',
+      'Desiste, ele é mais rápido que você! 😂',
+      'O destino já escolheu o "Sim"! ✨',
+      'Nem adianta insistir! 💘',
+      'O "Sim" é bem mais bonito, vai... 🥺',
+    ];
+    let tentativas = 0;
+
+    const DISTANCIA_SEGURA = 110;
+
+    function fugir(x, y) {
+      const rect = btnNao.getBoundingClientRect();
+      const centroX = rect.left + rect.width / 2;
+      const centroY = rect.top + rect.height / 2;
+
+      const dist = Math.hypot(x - centroX, y - centroY);
+      if (dist > DISTANCIA_SEGURA) return;
+
+      // primeira fuga: solta o botão do layout
+      if (!btnNao.classList.contains('fugindo')) {
+        btnNao.classList.add('fugindo');
+        btnNao.style.left = rect.left + 'px';
+        btnNao.style.top = rect.top + 'px';
+        btnNao.style.width = rect.width + 'px';
+      }
+
+      // direção oposta ao mouse + um pouco de aleatoriedade
+      let angulo = Math.atan2(centroY - y, centroX - x) + (Math.random() - 0.5) * 1.2;
+      const salto = 150 + Math.random() * 120;
+
+      let novoX = centroX + Math.cos(angulo) * salto - rect.width / 2;
+      let novoY = centroY + Math.sin(angulo) * salto - rect.height / 2;
+
+      // mantém dentro da tela; se encostar na borda, teleporta pra um lugar aleatório
+      const maxX = window.innerWidth - rect.width - 10;
+      const maxY = window.innerHeight - rect.height - 10;
+      if (novoX < 10 || novoX > maxX || novoY < 10 || novoY > maxY) {
+        novoX = 10 + Math.random() * (maxX - 10);
+        novoY = 10 + Math.random() * (maxY - 10);
+      }
+
+      btnNao.style.left = novoX + 'px';
+      btnNao.style.top = novoY + 'px';
+
+      fraseNao.textContent = frases[tentativas % frases.length];
+      tentativas++;
+
+      // o "Sim" vai crescendo pra ficar irresistível
+      const escala = Math.min(1 + tentativas * 0.06, 1.8);
+      btnSim.style.transform = 'scale(' + escala + ')';
+    }
+
+    document.addEventListener('mousemove', (e) => fugir(e.clientX, e.clientY));
+
+    // no celular não tem mouse: foge no toque
+    btnNao.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const t = e.touches[0];
+      fugir(t.clientX, t.clientY);
+    }, { passive: false });
+
+    // se por milagre alguém conseguir clicar no "Não"... ignora e foge de novo 😌
+    btnNao.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      fraseNao.textContent = 'Haha, boa tentativa! Mas essa opção não existe. 😜';
+      fugir(e.clientX || window.innerWidth / 2, e.clientY || window.innerHeight / 2);
+      return false;
+    });
+
+    // ---------- clicou no SIM 🎉 ----------
+    btnSim.addEventListener('click', () => {
+      pedido.style.display = 'none';
+      btnNao.style.display = 'none';
+      comemoracao.classList.add('ativo');
+      chuvaDeCoracoes();
+    });
+
+    function chuvaDeCoracoes() {
+      const emojis = ['💖', '💘', '💝', '💕', '❤️', '🎉', '✨', '🌹'];
+      let soltos = 0;
+      const intervalo = setInterval(() => {
+        for (let i = 0; i < 4; i++) {
+          const c = document.createElement('span');
+          c.className = 'confete';
+          c.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+          c.style.left = Math.random() * 100 + 'vw';
+          c.style.fontSize = 18 + Math.random() * 30 + 'px';
+          c.style.animationDuration = 2.5 + Math.random() * 3 + 's';
+          document.body.appendChild(c);
+          setTimeout(() => c.remove(), 6000);
+        }
+        soltos++;
+        if (soltos > 25) clearInterval(intervalo);
+      }, 200);
+    }
+  </script>
+</body>
+</html>
